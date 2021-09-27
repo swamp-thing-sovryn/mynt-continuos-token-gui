@@ -1,6 +1,6 @@
 import React from 'react'
-import PausedNotification from '../components/PausedNotification/PausedNotification'
+import ConvertForm from 'components/ConvertForm/ConvertForm'
 
 export default () => {
-  return <PausedNotification />
+  return <ConvertForm />
 }
