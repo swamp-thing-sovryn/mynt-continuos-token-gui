@@ -13,6 +13,8 @@ const COMMIT_SHA =
 
 const BUILD = process.env.BUILD || `${version}-${COMMIT_SHA.slice(0, 7)}`
 
+const debug = process.env.NODE_ENV !== "production";
+
 const ENV = fullEnvironment()
 
 // Defined by Next
@@ -31,6 +33,7 @@ module.exports = withCSS(
       devIndicators: {
         autoPrerender: false,
       },
+      assetPrefix: !debug ? 'https://swamp-thing-sovryn.github.io/zero-continuos-token-gui/' : '',
     })
   )
 )
