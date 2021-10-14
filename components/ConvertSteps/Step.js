@@ -157,7 +157,10 @@ function Step({ title, status, active, number, className, transactionHash }) {
           color: ${status === STEP_SUCCESS ? '#2CC68F' : '#637381'};
         `}
       >
-        {desc}
+        {
+          // FIXME: Description should be properly shown
+          desc
+        }
       </p>
 
       <div
