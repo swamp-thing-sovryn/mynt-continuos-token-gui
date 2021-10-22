@@ -5,6 +5,7 @@ import {
   useApprove,
   useAllowance,
   useClaimOrderReceiptAmount,
+  useWaitForBatchToFinish,
 } from 'lib/web3-contracts'
 import { bigNum } from 'lib/utils'
 import ConvertSteps from 'components/ConvertSteps/ConvertSteps'
@@ -13,6 +14,7 @@ import processing from './assets/loader.gif'
 function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
   const openOrder = useOpenOrder()
   const claimOrder = useClaimOrder()
+  const waitForBatch = useWaitForBatchToFinish()
   const claimOrderReceiptAmount = useClaimOrderReceiptAmount()
   const changeAllowance = useApprove()
   const getAllowance = useAllowance()
@@ -85,6 +87,12 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
         },
       ])
 
+      steps.push([
+        'Wait for batch to finish',
+        {
+          onWaitCondition: () => waitForBatch(openOrderHash),
+        },
+      ])
       // And finally the claim order
       steps.push([
         'Claim order',
