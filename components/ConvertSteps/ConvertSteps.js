@@ -14,6 +14,7 @@ import Step from './Step'
 import StepperLayout from './StepperLayout'
 import StepperTitle from './StepperTitle'
 import useStepLayout from './useStepLayout'
+import { COLORS } from 'components/utils/constants'
 
 function initialStepState(steps) {
   return steps.map(() => {
@@ -42,7 +43,7 @@ function reduceSteps(steps, [action, stepIndex, value]) {
 }
 
 function ConvertSteps({
-  toAnj,
+  toBonded,
   fromAmount,
   convertedTotal,
   onReturnHome,
@@ -130,6 +131,7 @@ function ConvertSteps({
         active={stepState[stepIndex].active}
         status={stepState[stepIndex].status}
         transactionHash={stepState[stepIndex].hash}
+        showDesc={steps[stepIndex][1].showDesc}
       />
 
       {renderDivider && <Divider />}
@@ -158,7 +160,7 @@ function ConvertSteps({
           <h1
             css={`
               ${stepLayoutName === 'large' && 'margin-bottom: 80px'};
-              color: #20232c;
+              color: ${COLORS.FONT};
               text-align: center;
               padding-left: 40px;
               padding-right: 40px;
@@ -167,7 +169,7 @@ function ConvertSteps({
             <StepperTitle
               fromAmount={fromAmount}
               convertedTotal={convertedTotal}
-              toAnj={toAnj}
+              toBonded={toBonded}
               status={stepperStatus}
             />
           </h1>
@@ -177,7 +179,7 @@ function ConvertSteps({
               css={`
                 margin-top: 5px;
                 margin-bottom: 50px;
-                color: #6d7693;
+                color: ${COLORS.FONT};
               `}
             >
               {stepperStage + 1} out of {steps.length} transactions
@@ -212,7 +214,7 @@ ConvertSteps.propTypes = {
   steps: PropTypes.arrayOf(PropTypes.array),
   fromAmount: PropTypes.object,
   convertedTotal: PropTypes.object,
-  toAnj: PropTypes.bool,
+  toBonded: PropTypes.bool,
   onReturnHome: PropTypes.func,
 }
 

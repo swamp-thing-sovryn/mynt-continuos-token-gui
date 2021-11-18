@@ -8,23 +8,24 @@ import {
 } from './stepper-statuses'
 import { formatUnits } from 'lib/web3-utils'
 import { useTokenDecimals } from 'lib/web3-contracts'
+import { getTokenName } from '../utils/constants'
 
 const smallCaps = css`
   font-size: 32px;
 `
 
-function StepperTitle({ fromAmount, convertedTotal, status, toAnj }) {
-  const antDecimals = useTokenDecimals('ANT')
-  const anjDecimals = useTokenDecimals('ANJ')
+function StepperTitle({ fromAmount, convertedTotal, status, toBonded }) {
+  const antDecimals = useTokenDecimals('COLLATERAL')
+  const anjDecimals = useTokenDecimals('BONDED')
 
   const formattedFromAmount = formatUnits(fromAmount, {
-    digits: toAnj ? antDecimals : anjDecimals,
+    digits: toBonded ? antDecimals : anjDecimals,
     truncateToDecimalPlace: 8,
     commas: true,
   })
 
   const formattedTotal = formatUnits(convertedTotal, {
-    digits: toAnj ? anjDecimals : antDecimals,
+    digits: toBonded ? anjDecimals : antDecimals,
     truncateToDecimalPlace: 8,
     commas: true,
   })
@@ -33,8 +34,13 @@ function StepperTitle({ fromAmount, convertedTotal, status, toAnj }) {
     return (
       <>
         Convert {formattedFromAmount}{' '}
-        <span css={smallCaps}>{toAnj ? 'ANT' : 'ANJ'}</span> to{' '}
-        <span css={smallCaps}>{toAnj ? 'ANJ' : 'ANT'}</span>
+        <span css={smallCaps}>
+          {getTokenName(toBonded ? 'COLLATERAL' : 'BONDED')}
+        </span>{' '}
+        to{' '}
+        <span css={smallCaps}>
+          {getTokenName(toBonded ? 'BONDED' : 'COLLATERAL')}
+        </span>
       </>
     )
   } else if (status === STEPPER_SUCCESS) {
@@ -42,8 +48,13 @@ function StepperTitle({ fromAmount, convertedTotal, status, toAnj }) {
       <>
         You successfully converted <br />
         {formattedFromAmount}{' '}
-        <span css={smallCaps}>{toAnj ? 'ANT' : 'ANJ'}</span> to {formattedTotal}{' '}
-        <span css={smallCaps}>{toAnj ? 'ANJ' : 'ANT'}</span>
+        <span css={smallCaps}>
+          {getTokenName(toBonded ? 'COLLATERAL' : 'BONDED')}
+        </span>{' '}
+        to {formattedTotal}{' '}
+        <span css={smallCaps}>
+          {getTokenName(toBonded ? 'BONDED' : 'COLLATERAL')}
+        </span>
       </>
     )
   }
@@ -52,7 +63,7 @@ function StepperTitle({ fromAmount, convertedTotal, status, toAnj }) {
 StepperTitle.propTypes = {
   fromAmount: PropTypes.object,
   convertedTotal: PropTypes.object,
-  toAnj: PropTypes.bool,
+  toBonded: PropTypes.bool,
   status: PropTypes.oneOf([
     STEPPER_IN_PROGRESS,
     STEPPER_SUCCESS,

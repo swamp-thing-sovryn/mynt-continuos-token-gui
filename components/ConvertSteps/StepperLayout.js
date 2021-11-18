@@ -8,6 +8,7 @@ import {
   STEPPER_ERROR,
 } from './stepper-statuses'
 import repeat from './assets/repeat.svg'
+import { COLORS } from 'components/utils/constants'
 
 function StepperLayout({
   children,
@@ -28,7 +29,7 @@ function StepperLayout({
         flex-direction: column;
         width: 100vw;
         height: 100vh;
-        background-color: #f9fafc;
+        background-color: ${COLORS.BACKGROUND};
       `}
     >
       <div
@@ -63,7 +64,7 @@ function StepperLayout({
           {status === STEPPER_IN_PROGRESS && (
             <p
               css={`
-                color: #6d7693;
+                color: ${COLORS.FONT};
                 text-align: center;
                 padding-left: 40px;
                 padding-right: 40px;

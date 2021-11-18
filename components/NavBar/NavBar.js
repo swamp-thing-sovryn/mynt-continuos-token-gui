@@ -17,7 +17,7 @@ function NavBar({ logoMode }) {
         padding: 16px 40px 0 40px;
       `}
     >
-      <Logo mode={logoMode} />
+      <Logo mode={"normal"} />
       <AccountModule />
     </div>
   )

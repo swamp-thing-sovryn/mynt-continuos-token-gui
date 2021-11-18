@@ -44,21 +44,21 @@ function PausedNotification() {
             line-height: 1.15;
           `}
         >
-          ANJ : ANT conversion has been&nbsp;paused
+          BONDED : COLLATERAL conversion has been&nbsp;paused
         </h1>
         <p>
-          The ANJ : ANT bonding curve has been paused by the Aragon Network's
+          The BONDED : COLLATERAL bonding curve has been paused by the Aragon Network's
           Governor Council in response to the{' '}
           <a
             href="https://gov.aragon.org/#/aragon/proposal/QmNTgjdR3rNj25Ah6PxYzAzb8cD7cT6HmKoFFmKADrr2gC"
             target="_blank"
             rel="noopener noreferrer"
           >
-            proposal to merge ANT and ANJ
+            proposal to merge COLLATERAL and BONDED
           </a>
           .
         </p>
-        <p>The currently paused price of ANJ : ANT is:</p>
+        <p>The currently paused price of BONDED : COLLATERAL is:</p>
         <h2
           css={`
             display: flex;

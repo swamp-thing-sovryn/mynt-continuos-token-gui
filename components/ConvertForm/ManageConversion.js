@@ -9,9 +9,8 @@ import {
 } from 'lib/web3-contracts'
 import { bigNum } from 'lib/utils'
 import ConvertSteps from 'components/ConvertSteps/ConvertSteps'
-import processing from './assets/loader.gif'
 
-function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
+function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
   const openOrder = useOpenOrder()
   const claimOrder = useClaimOrder()
   const waitForBatch = useWaitForBatchToFinish()
@@ -38,16 +37,16 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
     let cancelled = false
 
     // Interacting with the bonding curve involves 2, 3 or 4 transactions (depending on the direction and state of allowance):
-    // 1. Reset approval (If we're converting ANT -> ANJ, an allowance was previously set but abandoned)
-    // 2. Raise approval (If we're converting ANT -> ANJ, the current allowance is not high enough)
+    // 1. Reset approval (If we're converting COLLATERAL -> BONDED, an allowance was previously set but abandoned)
+    // 2. Raise approval (If we're converting COLLATERAL -> BONDED, the current allowance is not high enough)
     // 3. Open a buy order
     // 4. Claim the order
     const createConvertSteps = async () => {
       let openOrderHash
       let steps = []
 
-      // First we check for allowance if the direction is ANT -> ANJ
-      if (toAnj) {
+      // First we check for allowance if the direction is COLLATERAL -> BONDED
+      if (toBonded) {
         const allowance = await getAllowance()
 
         // and if we need more, add a step to ask for an approval
@@ -56,6 +55,7 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
             'Raise approval',
             {
               onTxCreated: () => changeAllowance(fromAmount),
+              showDesc: true
             },
           ])
 
@@ -68,6 +68,7 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
               'Reset approval',
               {
                 onTxCreated: () => changeAllowance(0),
+                showDesc: true
               },
             ])
           }
@@ -76,14 +77,15 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
 
       // Next add the open order
       steps.push([
-        `Create ${toAnj ? 'buy' : 'sell'} order`,
+        `Create ${toBonded ? 'buy' : 'sell'} order`,
         {
-          onTxCreated: () => openOrder(fromAmount, toAnj),
+          onTxCreated: () => openOrder(fromAmount, toBonded),
 
           // We need to store a reference to the hash so we can use it in the following step
           onHashCreated: hash => {
             openOrderHash = hash
           },
+          showDesc: true
         },
       ])
 
@@ -91,14 +93,16 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
         'Wait for batch to finish',
         {
           onWaitCondition: () => waitForBatch(openOrderHash),
+          showDesc: false
         },
       ])
       // And finally the claim order
       steps.push([
         'Claim order',
         {
-          onTxCreated: () => claimOrder(openOrderHash, toAnj),
+          onTxCreated: () => claimOrder(openOrderHash, toBonded),
           onTxMined: hash => updateConvertedValue(hash),
+          showDesc: true
         },
       ])
 
@@ -122,7 +126,7 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
     fromAmount,
     getAllowance,
     openOrder,
-    toAnj,
+    toBonded,
     updateConvertedValue,
   ])
 
@@ -131,7 +135,7 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
       {conversionSteps.length > 0 ? (
         <ConvertSteps
           steps={conversionSteps}
-          toAnj={toAnj}
+          toBonded={toBonded}
           fromAmount={fromAmount}
           convertedTotal={convertedTotal}
           onReturnHome={handleReturnHome}
@@ -146,13 +150,6 @@ function ManageConversion({ toAnj, fromAmount, handleReturnHome }) {
             height: 100vh;
           `}
         >
-          <img
-            css={`
-              max-width: 125px;
-            `}
-            src={processing}
-            alt=""
-          />
         </div>
       )}
     </>

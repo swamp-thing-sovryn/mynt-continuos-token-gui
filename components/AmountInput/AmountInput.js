@@ -1,20 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { useViewport } from 'use-viewport'
-
-import anjColor from './anj-color.svg'
-import anjWhite from './anj-white.svg'
-import antColor from './ant-color.svg'
-import antWhite from './ant-white.svg'
-
-function getImage(color, symbol) {
-  if (symbol === 'ANT') {
-    return color ? antColor : antWhite
-  }
-  if (symbol === 'ANJ') {
-    return color ? anjColor : anjWhite
-  }
-}
+import { COLORS, getTokenName } from 'components/utils/constants'
 
 function AmountInput({
   color = true,
@@ -53,20 +40,13 @@ function AmountInput({
           color: ${color ? '#9096B6' : '#FFF'};
         `}
       >
-        <img
-          src={getImage(color, symbol)}
-          alt=""
-          css={`
-            margin-right: 12px;
-          `}
-        />
         <span
           css={`
             position: relative;
             top: 1px;
           `}
         >
-          {symbol}
+          {getTokenName(symbol)}
         </span>
       </div>
       <input
@@ -80,7 +60,7 @@ function AmountInput({
           width: 100%;
           text-align: center;
           font-weight: 600;
-          color: ${color ? '#1c1c1c' : '#FFF'};
+          color: ${color ? COLORS.FONT : '#FFF'};
           font-size: ${isCompact ? '36px' : '88px'};
           background: transparent;
           border: 0;
@@ -98,7 +78,7 @@ AmountInput.propTypes = {
   color: PropTypes.bool,
   disabled: PropTypes.bool,
   onChange: PropTypes.func,
-  symbol: PropTypes.oneOf(['ANT', 'ANJ']).isRequired,
+  symbol: PropTypes.oneOf(['COLLATERAL', 'BONDED']).isRequired,
   value: PropTypes.string,
 }
 

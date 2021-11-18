@@ -11,6 +11,7 @@ import StatusIcon from './StatusIcon'
 
 import TransactionBadge from './TransactionBadge'
 import { ABSOLUTE_FILL } from 'lib/css-utils'
+import { COLORS } from 'components/utils/constants'
 
 const STATUS_DESC = {
   [STEP_WAITING]: 'Waiting for signature',
@@ -47,9 +48,9 @@ const pulseAnimation = css`
 function getBorderColor(status) {
   switch (status) {
     case STEP_WAITING:
-      return '#FFAA75'
+      return COLORS.ACCENT
     case STEP_WORKING:
-      return '#FFAA75'
+      return COLORS.ACCENT
     case STEP_SUCCESS:
       return '#2CC68F'
     case STEP_ERROR:
@@ -60,7 +61,7 @@ function getBorderColor(status) {
   }
 }
 
-function Step({ title, status, active, number, className, transactionHash }) {
+function Step({ title, status, active, number, className, transactionHash, showDesc }) {
   const desc = useMemo(() => STATUS_DESC[status], [status])
   const borderColor = useMemo(() => getBorderColor(status), [status])
 
@@ -98,27 +99,25 @@ function Step({ title, status, active, number, className, transactionHash }) {
               justify-content: center;
             `}
           >
-            {status === STEP_WAITING && (
-              <span
-                css={`
-                  position: absolute;
+            <span
+              css={`
+                position: absolute;
 
-                  top: 50%;
-                  left: 50%;
+                top: 50%;
+                left: 50%;
 
-                  transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%);
 
-                  line-height: 1;
-                  color: #ffffff;
-                  font-size: 24px;
-                  font-weight: 600;
+                line-height: 1;
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: 600;
 
-                  z-index: 1;
-                `}
-              >
-                {number}
-              </span>
-            )}
+                z-index: 1;
+              `}
+            >
+              {number}
+            </span>
 
             <StatusIcon status={status} />
 
@@ -142,7 +141,7 @@ function Step({ title, status, active, number, className, transactionHash }) {
           text-align: center;
           margin-bottom: 7px;
           font-size: 20px;
-          color: ${status === STEP_ERROR ? '#FF7C7C' : '#4A5165'};
+          color: ${status === STEP_ERROR ? '#FF7C7C' : COLORS.FONT_ACCENT};
           font-weight: 500;
         `}
       >
@@ -154,13 +153,10 @@ function Step({ title, status, active, number, className, transactionHash }) {
           text-align: center;
           margin-bottom: 0;
           font-size: 14px;
-          color: ${status === STEP_SUCCESS ? '#2CC68F' : '#637381'};
+          color: ${status === STEP_SUCCESS ? '#2CC68F' : COLORS.FONT};
         `}
       >
-        {
-          // FIXME: Description should be properly shown
-          desc
-        }
+        {showDesc ? desc : ''}
       </p>
 
       <div
@@ -205,6 +201,7 @@ Step.propTypes = {
     STEP_SUCCESS,
     STEP_ERROR,
   ]),
+  showDesc: PropTypes.bool,
 }
 
 export default Step

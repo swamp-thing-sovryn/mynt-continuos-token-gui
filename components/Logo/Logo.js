@@ -3,18 +3,6 @@ import PropTypes from 'prop-types'
 import { useTransition, animated } from 'react-spring'
 
 import logo from './logo.svg'
-import logoAnt from './logo-ant.svg'
-import logoAnj from './logo-anj.svg'
-
-function getImage(mode) {
-  if (mode === 'ant') {
-    return logoAnt
-  }
-  if (mode === 'anj') {
-    return logoAnj
-  }
-  return logo
-}
 
 function Logo({
   label = 'Aragon Bonding Curve Converter',
@@ -60,7 +48,7 @@ function Logo({
         <animated.img
           key={key}
           alt={label}
-          src={getImage(mode)}
+          src={logo}
           style={{ opacity }}
           css={`
             position: absolute;

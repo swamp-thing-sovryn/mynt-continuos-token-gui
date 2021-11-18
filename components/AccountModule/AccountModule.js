@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import { OverlayTrigger, Popover } from 'react-bootstrap'
 import styled from 'styled-components'
 import EthIdenticon from 'components/EthIdenticon/EthIdenticon'
-import { trackEvent } from 'lib/analytics'
 import { useWalletAugmented } from 'lib/wallet'
 import { shortenAddress } from 'lib/web3-utils'
 
@@ -12,9 +11,11 @@ import frame from './provider-icons/frame.svg'
 import metamask from './provider-icons/metamask.svg'
 import portis from './provider-icons/portis.svg'
 import lightning from './lightning.svg'
+import { COLORS } from 'components/utils/constants'
 
 function AccountModule() {
   const { account } = useWalletAugmented()
+  console.log(account)
   return account ? <ConnectedMode /> : <DisconnectedMode />
 }
 
@@ -27,14 +28,7 @@ function DisconnectedMode() {
 
   const activateAndTrack = useCallback(
     async providerId => {
-      const ok = await activate(providerId)
-      if (ok) {
-        trackEvent('web3_connect', {
-          segmentation: {
-            provider: providerId,
-          },
-        })
-      }
+      await activate(providerId)
     },
     [activate]
   )
@@ -77,7 +71,7 @@ function DisconnectedMode() {
                 height: 32px;
                 border-bottom: 0.5px solid #dde4e8;
                 text-transform: uppercase;
-                color: #637381;
+                color: ${COLORS.FONT};
               `}
             >
               <span
@@ -90,7 +84,7 @@ function DisconnectedMode() {
                   font-size: 12px;
                 `}
               >
-                Ethereum Providers
+                RSK Providers
               </span>
               <div
                 css={`
@@ -105,21 +99,6 @@ function DisconnectedMode() {
                   name="Metamask"
                   onActivate={() => activateAndTrack('injected')}
                   image={metamask}
-                />
-                <ProviderButton
-                  name="Frame"
-                  onActivate={() => activateAndTrack('frame')}
-                  image={frame}
-                />
-                <ProviderButton
-                  name="Fortmatic"
-                  onActivate={() => activateAndTrack('fortmatic')}
-                  image={fortmatic}
-                />
-                <ProviderButton
-                  name="Portis"
-                  onActivate={() => activateAndTrack('portis')}
-                  image={portis}
                 />
               </div>
             </div>
@@ -142,7 +121,7 @@ function DisconnectedMode() {
               margin-bottom: 4px;
             `}
           />
-          Enable Account
+          Connect Wallet 
         </div>
       </OverlayTrigger>
     </ButtonBase>
@@ -225,12 +204,12 @@ const Container = styled.div`
 `
 const StyledPopover = styled(Popover)`
   overflow: hidden;
-  background: #fff;
+  background: ${COLORS.BACKGROUND};
   box-shadow: 0px 7px 24px rgba(0, 0, 0, 0.25);
   border: 0 solid transparent;
-  width: 410px;
+  width: 130px;
   max-width: 90vw;
-  height: 313px;
+  height: 165px;
   left: 982px;
   top: 103px;
 
@@ -261,7 +240,7 @@ const StyledPopover = styled(Popover)`
       background: transparent;
       border: 0;
       cursor: pointer;
-      color: #637381;
+      color: ${COLORS.FONT};
     }
     button:hover {
       color: #212b36;
@@ -285,7 +264,7 @@ const ButtonBase = styled.div`
   display: flex;
   align-items: center;
   text-align: left;
-  padding: 0 8px 0 16px;
+  padding: 0 16px 0 16px;
   background: #ffffff;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
   border-radius: 4px;

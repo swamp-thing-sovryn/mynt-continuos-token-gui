@@ -13,8 +13,9 @@ import { formatUnits } from 'lib/web3-utils'
 import { useConvertInputs } from './useConvertInputs'
 
 import question from './assets/question.svg'
+import { COLORS, getTokenName } from 'components/utils/constants'
 
-const options = ['ANT', 'ANJ']
+const options = ['COLLATERAL', 'BONDED']
 
 const CONVERTER_STATUSES = {
   FORM: Symbol('STATE_FORM'),
@@ -25,7 +26,7 @@ function ConvertForm() {
   const [formStatus, setFormStatus] = useState(CONVERTER_STATUSES.FORM)
   const [selectedOption, setSelectedOption] = useState(1)
   const [inverted, setInverted] = useState(true)
-  const toAnj = useMemo(() => !inverted, [inverted])
+  const toBonded = useMemo(() => !inverted, [inverted])
   const [legalChecked, setLegalChecked] = useState(false)
   const {
     amountSource,
@@ -35,7 +36,7 @@ function ConvertForm() {
     inputValueRecipient,
     inputValueSource,
     resetInputs,
-  } = useConvertInputs(options[selectedOption], toAnj)
+  } = useConvertInputs(options[selectedOption], toBonded)
   const tokenBalance = useTokenBalance(options[selectedOption])
 
   const { account } = useWalletAugmented()
@@ -58,9 +59,9 @@ function ConvertForm() {
   const handleConvertMax = useCallback(() => {
     handleManualInputChange(
       formatUnits(tokenBalance, { truncateToDecimalPlace: 3 }),
-      toAnj
+      toBonded
     )
-  }, [handleManualInputChange, toAnj, tokenBalance])
+  }, [handleManualInputChange, toBonded, tokenBalance])
 
   const handleConvert = useCallback(() => {
     setFormStatus(CONVERTER_STATUSES.STEPPER)
@@ -74,7 +75,6 @@ function ConvertForm() {
   const submitButtonDisabled = Boolean(
     !account ||
       bondingPriceLoading ||
-      !legalChecked ||
       !parseFloat(inputValueSource) > 0 ||
       inputError
   )
@@ -83,7 +83,7 @@ function ConvertForm() {
     if (formStatus !== CONVERTER_STATUSES.FORM) {
       return 'normal'
     }
-    return inverted ? 'anj' : 'ant'
+    return inverted ? 'bonded' : 'collateral'
   }, [formStatus, inverted])
 
   return (
@@ -107,7 +107,7 @@ function ConvertForm() {
           >
             <AmountInput
               error={inputError}
-              symbol={inverted ? 'ANJ' : 'ANT'}
+              symbol={inverted ? 'BONDED' : 'COLLATERAL'}
               color={false}
               value={inputValueSource}
               disabled={inputDisabled}
@@ -138,21 +138,19 @@ function ConvertForm() {
             `}
           >
             <AmountInput
-              symbol={inverted ? 'ANT' : 'ANJ'}
+              symbol={inverted ? 'COLLATERAL' : 'BONDED'}
               color={true}
               value={inputValueRecipient}
               onChange={() => null}
             />
             <LabelWithOverlay
               label="The conversion amount is an estimate"
-              description="This tool uses a bonding curve to convert ANT into ANJ and
+              description={`This tool uses a bonding curve to convert ${getTokenName(
+                'COLLATERAL'
+              )} into ${getTokenName('BONDED')} and
                       back at a pre-defined rate. The price is calculated by an
                       automated market maker smart contract that defines a
-                      relationship between token price and token supply. You can
-                      also convert ANT into other tokens such as ETH or DAI on
-                      various exchanges like
-                      Uniswap.
-"
+                      relationship between token price and token supply.`}
               overlayPlacement="top"
             />
             <div
@@ -170,40 +168,6 @@ function ConvertForm() {
               <Button disabled={submitButtonDisabled} onClick={handleConvert}>
                 Convert
               </Button>
-              <div
-                css={`
-                  display: flex;
-                  align-items: center;
-                  margin-top: 24px;
-                `}
-              >
-                <label
-                  css={`
-                    font-size: 16px;
-                    line-height: 1.3;
-                    margin-bottom: 0;
-                    color: #9096b6;
-                  `}
-                >
-                  <input
-                    css={`
-                      cursor: pointer;
-                      margin-right: 8px;
-                    `}
-                    type="checkbox"
-                    onChange={handleLegalToggle}
-                    checked={legalChecked}
-                  />
-                  By clicking on “Convert” you are accepting our{' '}
-                  <Anchor
-                    href="https://anj.aragon.org/legal/terms-general.pdf"
-                    target="_blank"
-                  >
-                    legal terms
-                  </Anchor>
-                  .
-                </label>
-              </div>
               <Docs />
             </div>
           </div>
@@ -211,7 +175,7 @@ function ConvertForm() {
         reveal={
           formStatus === CONVERTER_STATUSES.STEPPER && (
             <ManageConversion
-              toAnj={toAnj}
+              toBonded={toBonded}
               fromAmount={amountSource}
               handleReturnHome={handleReturnHome}
             />
@@ -266,26 +230,23 @@ function Docs() {
       `}
     >
       <li>
-        <Anchor href="https://anj.aragon.org/">About</Anchor>
+        <Anchor href="https://bonded.aragon.org/">About</Anchor>
       </li>
       <li>
         <Anchor href="https://help.aragon.org/article/41-aragon-court">
           Docs
         </Anchor>
       </li>
-      <li>
-        <Anchor href="https://court.aragon.org/dashboard">Court</Anchor>
-      </li>
     </ul>
   )
 }
 
 const Button = styled.button`
-  background: linear-gradient(189.76deg, #ffb36d 6.08%, #ff8888 93.18%);
+  background: ${COLORS.ACCENT};
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
   border: solid 0px transparent;
   border-radius: 6px;
-  color: white;
+  color: ${COLORS.FONT_BUTTON_ACCENT};
   width: 100%;
   max-width: 470px;
   height: 52px;
@@ -330,12 +291,12 @@ const MaxButton = styled.button`
   border: 1px solid #fff;
   border-radius: 3px;
   cursor: pointer;
-  outline: 0 !important;
+  outline: 0 !importcollateral;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 
   &:hover,
   &:active {
-    outline: 0 !important;
+    outline: 0 !importcollateral;
   }
   &:focus,
   &:active {
