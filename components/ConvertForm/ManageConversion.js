@@ -6,19 +6,30 @@ import {
   useAllowance,
   useClaimOrderReceiptAmount,
   useWaitForBatchToFinish,
+  useWaitForTx
 } from 'lib/web3-contracts'
 import { bigNum } from 'lib/utils'
 import ConvertSteps from 'components/ConvertSteps/ConvertSteps'
 
-function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
+import { useStore } from 'components/utils/store';
+
+function ManageConversion({ handleReturnHome }) {
   const openOrder = useOpenOrder()
   const claimOrder = useClaimOrder()
   const waitForBatch = useWaitForBatchToFinish()
+  const waitForTx = useWaitForTx()
   const claimOrderReceiptAmount = useClaimOrderReceiptAmount()
   const changeAllowance = useApprove()
   const getAllowance = useAllowance()
   const [conversionSteps, setConversionSteps] = useState([])
   const [convertedTotal, setConvertedTotal] = useState(bigNum(-1))
+  const [toBonded, amountSource, openOrderHash, setOrderHash, savedSteps] = useStore(state => [
+      state.toBonded,
+      state.amountSource,
+      state.openOrderHash,
+      state.setOrderHash,
+      state.savedSteps
+  ])
 
   const updateConvertedValue = useCallback(
     async hash => {
@@ -42,7 +53,6 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
     // 3. Open a buy order
     // 4. Claim the order
     const createConvertSteps = async () => {
-      let openOrderHash
       let steps = []
 
       // First we check for allowance if the direction is COLLATERAL -> BONDED
@@ -50,12 +60,13 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
         const allowance = await getAllowance()
 
         // and if we need more, add a step to ask for an approval
-        if (allowance.lt(bigNum(fromAmount))) {
+        if (allowance.lt(bigNum(amountSource))) {
           steps.unshift([
             'Raise approval',
             {
-              onTxCreated: () => changeAllowance(fromAmount),
-              showDesc: true
+              onTxCreated: () => changeAllowance(amountSource),
+              onResumeWait: (hash) => waitForTx(hash),
+              showDesc: true,
             },
           ])
 
@@ -63,12 +74,17 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
           // but wants to convert even more tokens this time. When dealing with this case
           // we want to first prepend a transaction to reset the allowance back to zero
           // (before raising it in the next transaction from above).
-          if (!allowance.isZero()) {
+          // Note: the second part of the if statement is a workaround. When state is saved and restored 
+          //       and the buy order has been created already, the transfer was made and allowance is zero
+          //       resulting on this step not to be included and not matching the saved steps.
+          //       This is not a nice fix but due to time constraints is better than nothing.
+          if (!allowance.isZero() || savedSteps.length === 5) {
             steps.unshift([
               'Reset approval',
               {
                 onTxCreated: () => changeAllowance(0),
-                showDesc: true
+                onResumeWait: (hash) => waitForTx(hash),
+                showDesc: true,
               },
             ])
           }
@@ -79,30 +95,35 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
       steps.push([
         `Create ${toBonded ? 'buy' : 'sell'} order`,
         {
-          onTxCreated: () => openOrder(fromAmount, toBonded),
+          onTxCreated: () => {
+            console.log('onTxCreated', amountSource, toBonded)
+            return openOrder(amountSource, toBonded)
+          },
 
           // We need to store a reference to the hash so we can use it in the following step
           onHashCreated: hash => {
-            openOrderHash = hash
+            setOrderHash(hash)
           },
-          showDesc: true
+          onWaitForTx: (hash) => waitForTx(hash),
+          showDesc: true,
         },
       ])
 
       steps.push([
         'Wait for batch to finish',
         {
-          onWaitCondition: () => waitForBatch(openOrderHash),
-          showDesc: false
+          onWaitCondition: (hash) => waitForBatch(openOrderHash ? openOrderHash : hash),
+          showDesc: false,
         },
       ])
       // And finally the claim order
       steps.push([
         'Claim order',
         {
-          onTxCreated: () => claimOrder(openOrderHash, toBonded),
+          onOrderClaim: (hash) => claimOrder(openOrderHash ? openOrderHash : hash, toBonded),
+          onResumeWait: (hash) => waitForTx(hash),
           onTxMined: hash => updateConvertedValue(hash),
-          showDesc: true
+          showDesc: true,
         },
       ])
 
@@ -123,7 +144,7 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
   }, [
     changeAllowance,
     claimOrder,
-    fromAmount,
+    amountSource,
     getAllowance,
     openOrder,
     toBonded,
@@ -136,7 +157,7 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
         <ConvertSteps
           steps={conversionSteps}
           toBonded={toBonded}
-          fromAmount={fromAmount}
+          fromAmount={amountSource}
           convertedTotal={convertedTotal}
           onReturnHome={handleReturnHome}
         />
@@ -149,8 +170,7 @@ function ManageConversion({ toBonded, fromAmount, handleReturnHome }) {
             width: 100vw;
             height: 100vh;
           `}
-        >
-        </div>
+        ></div>
       )}
     </>
   )

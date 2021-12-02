@@ -15,6 +15,7 @@ import StepperLayout from './StepperLayout'
 import StepperTitle from './StepperTitle'
 import useStepLayout from './useStepLayout'
 import { COLORS } from 'components/utils/constants'
+import { useStore } from 'components/utils/store'
 
 function initialStepState(steps) {
   return steps.map(() => {
@@ -26,22 +27,6 @@ function initialStepState(steps) {
   })
 }
 
-function reduceSteps(steps, [action, stepIndex, value]) {
-  if (action === 'setActive') {
-    steps[stepIndex].active = true
-    return [...steps]
-  }
-  if (action === 'setHash') {
-    steps[stepIndex].hash = value
-    return [...steps]
-  }
-  if (action === 'setStatus') {
-    steps[stepIndex].status = value
-    return [...steps]
-  }
-  return steps
-}
-
 function ConvertSteps({
   toBonded,
   fromAmount,
@@ -49,74 +34,132 @@ function ConvertSteps({
   onReturnHome,
   steps,
 }) {
-  const [stepperStatus, setStepperStatus] = useState(STEPPER_IN_PROGRESS)
-  const [stepperStage, setStepperStage] = useState(0)
   const [stepperBoundsRef, stepLayoutName] = useStepLayout({
     boundsOffset: 100,
   })
 
-  const [stepState, updateStep] = useReducer(
-    reduceSteps,
-    initialStepState(steps)
-  )
+  const {
+    stepperStage,
+    setStepperStage,
+    savedSteps,
+    stepperStatus,
+    setStepperStatus,
+    setSteps,
+    setStepActive,
+    setStepStatus,
+    setActiveStage: setActiveStep,
+    setStepHash,
+  } = useStore()
+
+  const setInitialSteps = useCallback(() => {
+    setSteps(initialStepState(steps))
+    setStepperStatus(STEPPER_IN_PROGRESS)
+  }, []);
+
+  useEffect(() => {
+    if (savedSteps.length > 0) return
+    setInitialSteps()
+  }, [])
 
   const attemptStepSigning = useCallback(
-    async stepIndex => {
-      const { onHashCreated, onTxCreated, onTxMined, onWaitCondition } = steps[
-        stepIndex
-      ][1]
+    async (stepIndex, retry) => {
+      debugger;
+      const currentStep = savedSteps[stepIndex]
+      if (!currentStep) return
+      const {
+        onHashCreated,
+        onTxCreated,
+        onOrderClaim,
+        onResumeWait,
+        onTxMined,
+        onWaitCondition,
+        onWaitForTx,
+      } = steps[stepIndex][1]
+
+      const { hash, status } = currentStep
+
+      if (status === STEP_ERROR && !retry) {
+        return
+      }
 
       try {
-        updateStep(['setActive', stepIndex])
-        
-        updateStep(['setStatus', stepIndex, STEP_WAITING])
-        if (onTxCreated) {
+        setStepActive(stepIndex)
+        if (!hash && onTxCreated) {
+          setStepStatus(stepIndex, STEP_WAITING)
           // Awaiting confirmation
           const transaction = await onTxCreated()
 
           onHashCreated && onHashCreated(transaction.hash)
-          updateStep(['setHash', stepIndex, transaction.hash])
+          setStepHash(stepIndex, transaction.hash)
 
           // Mining transaction
-          updateStep(['setStatus', stepIndex, STEP_WORKING])
+          setStepStatus(stepIndex, STEP_WORKING)
+
+          await transaction.wait()
+
+          onTxMined && (await onTxMined(transaction.hash))
+        }
+       
+        if (!hash && onOrderClaim) {
+          setStepStatus(stepIndex, STEP_WAITING)
+          // Awaiting confirmation
+          const { hash } = savedSteps[stepIndex - 2] // searching for openOrderTransactionHash to hold 
+          const transaction = await onOrderClaim(hash)
+
+          onHashCreated && onHashCreated(transaction.hash)
+          setStepHash(stepIndex, transaction.hash)
+
+          // Mining transaction
+          setStepStatus(stepIndex, STEP_WORKING)
 
           await transaction.wait()
 
           onTxMined && (await onTxMined(transaction.hash))
         }
 
+        if (hash && status === STEP_WORKING && onResumeWait) {
+          await onResumeWait(hash)
+        }
+
+        if (hash && status === STEP_WORKING && onWaitForTx) {
+          await onWaitForTx(hash)
+        }
+
         if (onWaitCondition) {
-          await onWaitCondition()
+          const { hash } = savedSteps[stepIndex - 1] // searching for openOrderTransactionHash to hold 
+          await onWaitCondition(hash)
         }
 
         // Success
-        updateStep(['setStatus', stepIndex, STEP_SUCCESS])
+        setStepStatus(stepIndex, STEP_SUCCESS)
 
         // Activate next step or show as completed
         if (stepperStage < steps.length - 1) {
-          setStepperStage(stepperStage + 1)
+          setActiveStep(stepperStage + 1)
         } else {
           setStepperStatus(STEPPER_SUCCESS)
         }
       } catch (err) {
         // If there's a problem mining the transaction we catch it
         // and visually feedback to the user
-        updateStep(['setStatus', stepIndex, STEP_ERROR])
+        setStepStatus(stepIndex, STEP_ERROR)
         setStepperStatus(STEPPER_ERROR)
         console.error(err)
       }
     },
-    [steps, stepperStage]
+    [steps, stepperStage, savedSteps.length]
   )
 
-  const handleRetrySigning = useCallback(() => {
+  const handleRetrySigning = () => {
     setStepperStatus(STEPPER_IN_PROGRESS)
-    attemptStepSigning(stepperStage)
-  }, [attemptStepSigning, stepperStage])
+    setStepStatus(stepperStage, STEP_WAITING)
+    attemptStepSigning(stepperStage, true)
+  }
 
   useEffect(() => {
+    console.log("savedSteps length", savedSteps.length)
     attemptStepSigning(stepperStage)
-  }, [stepperStage, attemptStepSigning])
+  }, [stepperStage, savedSteps.length])
 
   const renderStep = (stepIndex, renderDivider) => (
     <li
@@ -124,16 +167,16 @@ function ConvertSteps({
       css={`
         display: flex;
       `}
-    >
-      <Step
+    >{
+        savedSteps && savedSteps[stepIndex] && <Step
         title={steps[stepIndex][0]}
         number={stepIndex + 1}
-        active={stepState[stepIndex].active}
-        status={stepState[stepIndex].status}
-        transactionHash={stepState[stepIndex].hash}
+        active={savedSteps[stepIndex].active}
+        status={savedSteps[stepIndex].status}
+        transactionHash={savedSteps[stepIndex].hash}
         showDesc={steps[stepIndex][1].showDesc}
       />
-
+    }
       {renderDivider && <Divider />}
     </li>
   )
@@ -166,12 +209,12 @@ function ConvertSteps({
               padding-right: 40px;
             `}
           >
-            <StepperTitle
+            {/* <StepperTitle
               fromAmount={fromAmount}
               convertedTotal={convertedTotal}
               toBonded={toBonded}
               status={stepperStatus}
-            />
+            /> */}
           </h1>
 
           {stepLayoutName === 'small' && (
