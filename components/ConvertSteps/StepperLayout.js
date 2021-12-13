@@ -16,6 +16,7 @@ function StepperLayout({
   onRepeatTransaction,
   onReturnHome,
   titleArea,
+  disableAbandon
 }) {
   const { above } = useViewport()
   const largeLayout = above(600)
@@ -92,9 +93,12 @@ function StepperLayout({
                     justify-content: flex-end;`};
                 `}
               >
-                <Button mode="secondary" onClick={onReturnHome}>
-                  Abandon process
-                </Button>
+                { !disableAbandon && (
+                    <Button mode="secondary" onClick={onReturnHome}>
+                      Abandon process
+                    </Button>
+                  )
+                }
               </div>
 
               <div>
@@ -137,6 +141,7 @@ StepperLayout.propTypes = {
   ]),
   onRepeatTransaction: PropTypes.func,
   onReturnHome: PropTypes.func,
+  disableAbandon: PropTypes.bool
 }
 
 export default StepperLayout

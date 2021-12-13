@@ -193,6 +193,7 @@ function ConvertSteps({
       status={stepperStatus}
       onRepeatTransaction={handleRetrySigning}
       onReturnHome={onReturnHome}
+      disableAbandon={steps[stepperStage][1].disableAbandon || false}
       titleArea={
         <div
           css={`

@@ -256,10 +256,10 @@ function Docs() {
       `}
     >
       <li>
-        <Anchor href="https://bonded.aragon.org/">About</Anchor>
+        <Anchor href="https://live.sovryn.app">Sovryn</Anchor>
       </li>
       <li>
-        <Anchor href="https://help.aragon.org/article/41-aragon-court">
+        <Anchor href="https://wiki.sovryn.app/en/sovryn-dapp/origins/mynt">
           Docs
         </Anchor>
       </li>

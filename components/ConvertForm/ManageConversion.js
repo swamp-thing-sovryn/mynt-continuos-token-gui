@@ -124,6 +124,7 @@ function ManageConversion({ handleReturnHome }) {
           onResumeWait: (hash) => waitForTx(hash),
           onTxMined: hash => updateConvertedValue(hash),
           showDesc: true,
+          disableAbandon: true,
         },
       ])
 
