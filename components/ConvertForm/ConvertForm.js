@@ -105,6 +105,21 @@ function ConvertForm() {
       `}
     >
       <NavBar logoMode={navbarLogoMode} />
+      { inputDisabled && (
+        <div
+          css={`
+            width: 100%;
+            height: 100%;
+            color: ${COLORS.FONT};
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+            font-size: 32px;
+          `}
+        >Please connect your wallet to continue.</div>
+      )} 
       {!inputDisabled && (
         <SplitScreen
           inverted={inverted}
