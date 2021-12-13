@@ -63,7 +63,6 @@ function ConvertSteps({
 
   const attemptStepSigning = useCallback(
     async (stepIndex, retry) => {
-      debugger;
       const currentStep = savedSteps[stepIndex]
       if (!currentStep) return
       const {
