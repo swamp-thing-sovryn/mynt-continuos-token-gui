@@ -108,7 +108,7 @@ function DisconnectedMode() {
         <div
           css={`
             margin-top: 4px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: medium;
             background: transparent;
           `}
