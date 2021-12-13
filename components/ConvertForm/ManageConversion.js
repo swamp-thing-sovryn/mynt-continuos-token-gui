@@ -12,6 +12,7 @@ import { bigNum } from 'lib/utils'
 import ConvertSteps from 'components/ConvertSteps/ConvertSteps'
 
 import { useStore } from 'components/utils/store';
+import { STEP_CLAIM_BATCH, STEP_CREATE_ORDER, STEP_RAISE_APPROVAL, STEP_RESET_APPROVAL, STEP_WAIT_BATCH } from 'components/utils/constants';
 
 function ManageConversion({ handleReturnHome }) {
   const openOrder = useOpenOrder()
@@ -60,15 +61,19 @@ function ManageConversion({ handleReturnHome }) {
         const allowance = await getAllowance()
 
         // and if we need more, add a step to ask for an approval
-        if (allowance.lt(bigNum(amountSource))) {
-          steps.unshift([
-            'Raise approval',
-            {
-              onTxCreated: () => changeAllowance(amountSource),
-              onResumeWait: (hash) => waitForTx(hash),
-              showDesc: true,
-            },
-          ])
+        const requiresAllowance = allowance.lt(bigNum(amountSource)) && savedSteps.length === 0;
+        const savedIsAllowance = savedSteps.length > 0 && (savedSteps[0].name === STEP_RESET_APPROVAL || savedSteps[0].name === STEP_RAISE_APPROVAL);
+
+        if ( requiresAllowance || savedIsAllowance ) {
+            steps.unshift([
+              'Raise approval',
+              {
+                onTxCreated: () => changeAllowance(amountSource),
+                onResumeWait: (hash) => waitForTx(hash),
+                showDesc: true,
+                name: STEP_RAISE_APPROVAL
+              },
+            ])
 
           // Then there's the case when a user has an allowance set to the market maker contract
           // but wants to convert even more tokens this time. When dealing with this case
@@ -78,13 +83,14 @@ function ManageConversion({ handleReturnHome }) {
           //       and the buy order has been created already, the transfer was made and allowance is zero
           //       resulting on this step not to be included and not matching the saved steps.
           //       This is not a nice fix but due to time constraints is better than nothing.
-          if (!allowance.isZero() || savedSteps.length === 5) {
+          if (!allowance.isZero() || savedIsAllowance) {
             steps.unshift([
               'Reset approval',
               {
                 onTxCreated: () => changeAllowance(0),
                 onResumeWait: (hash) => waitForTx(hash),
                 showDesc: true,
+                name: STEP_RESET_APPROVAL
               },
             ])
           }
@@ -106,6 +112,7 @@ function ManageConversion({ handleReturnHome }) {
           },
           onWaitForTx: (hash) => waitForTx(hash),
           showDesc: true,
+          name: STEP_CREATE_ORDER
         },
       ])
 
@@ -114,6 +121,7 @@ function ManageConversion({ handleReturnHome }) {
         {
           onWaitCondition: (hash) => waitForBatch(openOrderHash ? openOrderHash : hash),
           showDesc: false,
+          name: STEP_WAIT_BATCH
         },
       ])
       // And finally the claim order
@@ -125,6 +133,7 @@ function ManageConversion({ handleReturnHome }) {
           onTxMined: hash => updateConvertedValue(hash),
           showDesc: true,
           disableAbandon: true,
+          name: STEP_CLAIM_BATCH
         },
       ])
 

@@ -17,3 +17,9 @@ export function getTokenName(symbol) {
     return 'MYNT'
   }
 }
+
+export const STEP_RAISE_APPROVAL = 'STEP_RAISE_APPROVAL';
+export const STEP_RESET_APPROVAL = 'STEP_RESET_APPROVAL';
+export const STEP_CREATE_ORDER = 'STEP_CREATE_ORDER';
+export const STEP_WAIT_BATCH = 'STEP_WAIT_BATCH';
+export const STEP_CLAIM_BATCH = 'STEP_CLAIM_BATCH';

@@ -18,11 +18,12 @@ import { COLORS } from 'components/utils/constants'
 import { useStore } from 'components/utils/store'
 
 function initialStepState(steps) {
-  return steps.map(() => {
+  return steps.map((step) => {
     return {
       status: STEP_WAITING,
       hash: null,
       active: false,
+      name: step[1].name
     }
   })
 }
