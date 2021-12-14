@@ -33,7 +33,7 @@ module.exports = withCSS(
       devIndicators: {
         autoPrerender: false,
       },
-      assetPrefix: !debug ? 'https://swamp-thing-sovryn.github.io/zero-continuos-token-gui/' : '',
+      assetPrefix: !debug ? 'https://swamp-thing-sovryn.github.io/mynt-continuos-token-gui/' : '',
     })
   )
 )
